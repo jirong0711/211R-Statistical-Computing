@@ -24,7 +24,7 @@ chapter | about
 9 | MCMC
 
 
-###### Assignments implemented twice are in the 'assignments' folder.
+###### Assignments implemented twice are in the 'Assignments' folder.
 
 
 
