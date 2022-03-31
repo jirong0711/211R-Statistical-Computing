@@ -29,6 +29,8 @@ chapter | about
 
 
 <h2> Translation </h2>
+
+
 - To perform statistical algorithms in multiple languages, pratice to translate course materials written in R into Python and Matlab.
 - You can check in Python and Matlab folders.
 
