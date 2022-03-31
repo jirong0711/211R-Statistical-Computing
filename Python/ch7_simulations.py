@@ -1,0 +1,347 @@
+# Slide 1 - Monte Carlo Simulation
+
+import numpy as np
+def rand_perm(n):
+  perm = np.arange(1,n+1)
+  for i in np.arange(n-1):
+    j = int(i+np.floor((n-i)*np.random.random(1)))
+    swap = perm[i].copy()
+    perm[i] = perm[j].copy()
+    perm[j] = swap
+  return perm
+print(rand_perm(6)) ; print(np.random.choice(6,6, replace=False) + 1)
+
+
+# Slide 2 - Monte Carlo Simulation
+import numpy as np
+def f(x):
+  return np.log(x)/2
+n = 10**4
+print(np.mean(f(np.random.geometric(2/3, n))))
+x = np.arange(1,n+1)
+print(np.sum(np.log(x)/3**x))
+
+cards = ["rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake",
+         "Horse", "Sheep", "Monkey", "Rooster", "Dog", "Pig"]
+
+
+def coupon_col1(cards):
+    ncards = len(cards)
+    getcards = np.zeros(ncards)
+    success = 0
+    nTrials = 0
+    while success == 0:
+        nTrials += 1
+        purchase = int(np.floor(ncards * np.random.random(1)))
+        getcards[purchase] = 1
+        if np.sum(getcards) == ncards:
+            success = 1
+    return nTrials
+
+
+print(coupon_col1(cards))
+nreps = 10 ** 4
+n = len(cards)
+x = [coupon_col1(cards) for i in range(nreps)]
+print(np.mean(x));
+print(np.sum(n / (n + 1 - np.arange(1, n + 1))))
+
+
+# Slide 3 - The Inverse Transform Method
+
+import numpy as np
+import pandas as pd
+from scipy.stats import poisson
+def poisson_sim(lamb):
+  X = 0
+  px = np.exp(-lamb)
+  Fx = px
+  U = np.random.random(1)
+  while Fx < U:
+    X += 1
+    px *= lamb/X
+    Fx += px
+  return X
+
+nreps = 10**4
+lamb = 0.5
+poissonX = pd.DataFrame([poisson_sim(lamb) for i in range(nreps)])
+
+print(poissonX.value_counts()/nreps)
+print(list(map(lambda x: round(poisson.pmf(x, 0.5),4), np.arange(5+1))))
+print(np.mean(poissonX)/np.var(poissonX))
+
+
+# Slide 4 - The Inverse Transform Method
+from scipy.stats import poisson
+import numpy as np
+import pandas as pd
+
+def binom_sim(n,p):
+  X = 0; px = (1-p)**n ; Fx = px ; U = np.random.random(1)
+  while Fx < U:
+    X += 1
+    px *= p/(1-p)*(n-X+1)/X
+    Fx += px
+  return X
+def poisson_sim(lamb):
+  X = 0
+  px = np.exp(-lamb)
+  Fx = px
+  U = np.random.random(1)
+  while Fx < U:
+    X += 1
+    px *= lamb/X
+    Fx += px
+  return X
+nreps = 10**4 ; n = 10**2 ; p = 0.005
+binomX = pd.DataFrame([binom_sim(n,p) for i in range(nreps)])
+print(binomX.value_counts()/nreps)
+
+lamb = 0.5
+poissonX = pd.DataFrame([poisson_sim(lamb) for i in range(nreps)])
+print(poissonX.value_counts()/nreps)
+print(list(map(lambda x: round(poisson.pmf(x, 0.5),4), np.arange(5+1))))
+
+def pois_falls(N):
+  temp = np.random.random(N)
+  falls = (1/N < temp)*(temp < 2/N)
+  return sum(falls)==0
+N = 10**3; print(pois_falls(N))
+nreps = 10**4 ; count1 = [pois_falls(N) for i in range(nreps)]
+print(1/np.mean(count1)) ; print(np.exp(1))
+
+
+# Slide 5 - The Inverse Transform Method
+import numpy as np
+import matplotlib.pyplot as plt
+n = 10**4 ; u = np.random.random(n)
+X = np.tan(np.pi*(u-1/2))
+print(np.median(X)) ; print(np.mean(X))
+print(np.mean(abs(X))) ; print(np.var(X))
+
+X = np.log(u/(1-u))
+plt.hist(X, bins=30, density=True)
+plt.ylim([0, 0.3])
+xs = np.linspace(-8,8)
+ys = np.exp(-xs)/(1+np.exp(-xs))**2
+plt.plot(xs,ys, color="red")
+plt.show()
+print(np.median(X)) ; print(np.mean(X))
+
+# Slide 6 - The Inverse Transform Method
+import numpy as np
+import matplotlib.pyplot as plt
+np.random.seed(17)
+
+n = 10**4 ; u = np.random.random(n)
+X = np.sqrt(-2*np.log(1-u))
+plt.hist(X, bins=30, density=True)
+plt.ylim([0,0.8])
+xs = np.linspace(0,5)
+ys = xs*np.exp(-xs**2/2)
+plt.plot(xs,ys,color="red")
+plt.show()
+
+plt.clf()
+np.random.seed(15)
+n = 10**3; u = np.random.random(n)
+X = np.log(2*u)*(u < 1/2) - np.log(2*(1-u))*(1/2 <u)
+plt.hist(X, bins=25, density=True)
+plt.xlim([-6,6])
+plt.ylim([0,0.6])
+xs = np.linspace(-6,6,1000)
+ys = np.exp(-abs(xs))/2
+plt.plot(xs,ys)
+plt.show()
+
+
+
+# Slide 7 - Transform Methods
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import beta
+import scipy.stats as stats
+nreps = 10**3
+def beta_sim(n,m):
+  X = np.sum(np.log(np.random.random(n)))
+  Y = np.sum(np.log(np.random.random(m)))
+  return X/(X+Y)
+
+beta_rv = [beta_sim(3,2) for i in range(nreps)]
+print(np.mean(beta_rv))
+q = list(map(lambda x: beta.ppf(x,3,2), np.linspace(0,1,nreps)))
+stats.probplot(q, dist=stats.beta, sparams=(3,2), plot=plt)
+plt.show()
+
+# Slide 8 - Generating Normal RV : Box-Muller Transformtion
+
+import numpy as np
+nsim = 10**5 ; z = np.zeros(int((nsim/2))*2).reshape(int(nsim/2),2)
+for i in np.arange(nsim/2):
+  i = int(i)
+  u = np.random.random(2)
+  z[i,0] = np.sqrt(-2*np.log(u[0]))*np.cos(2*np.pi*u[1])
+  z[i,1] = np.sqrt(-2*np.log(u[0]))*np.sin(2*np.pi*u[1])
+
+print(z)
+
+
+# Slide 9 - Generating Normal RV : Central Limit Theorem
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import norm
+
+nsim = 10**4 ; n =30
+x = np.random.random(nsim*n).reshape(nsim,n)
+xbar1 = np.sqrt(12*n)*(np.mean(x, axis=1)-1/2)
+print(np.mean(xbar1))
+plt.hist(xbar1, bins=30, density=True)
+plt.xlabel("Standardized Xbar")
+plt.title("Standard Normal Random Numbers generated by CLT")
+
+xs = np.arange(-4, 4, 0.05)
+ys = list(map(lambda x: norm.pdf(x,0,1), xs))
+plt.plot(xs, ys)
+plt.show()
+
+plt.clf()
+
+nsim = 10**4 ; n =30
+x = np.random.random(nsim*n).reshape(nsim,n)
+sx = np.std(x, axis=1)
+tn = np.sqrt(n)*(np.mean(x, axis=1)-1/2)/sx
+plt.hist(tn, bins=30, density=True)
+plt.xlim([-3,3])
+xs = np.arange(-3,3,0.05)
+ys = list(map(lambda x: norm.pdf(x,0,1), xs))
+plt.plot(xs, ys, color="red")
+plt.title("Studentized Normal Random Numbers generated by CLT")
+plt.xlabel("Studentized Sample Mean")
+plt.show()
+
+# Slide 10 - Student¡¯s t-Distribution
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import gaussian_kde
+from scipy.stats import norm, t
+np.random.seed(100)
+nsim=10**4 ; n = 4
+x = np.random.normal(1,2,n*nsim).reshape(nsim,n)
+xbar = np.mean(x, axis=1)
+sx = np.std(x, axis=1)
+stx = np.sqrt(n)*(xbar-1)/sx
+plt.hist(stx, density=True, bins=100)
+plt.ylim([0, 0.5])
+plt.xlim([-6,6])
+plt.title("Simulating t(3) random variables")
+density = gaussian_kde(stx)
+xs = np.linspace(-6, 6, 800)
+plt.plot(xs,density(xs), color="black")
+
+
+x1 = np.arange(-4, 4, 0.01)
+z1 = list(map(lambda x: norm.pdf(x, 0, 1), x1))
+plt.plot(x1, z1, color="indianred", linestyle=(0,(4.5,1.5)))
+t1 = list(map(lambda x: t.pdf(x, 3), x1))
+plt.plot(x1, t1, color="blue", linestyle=(0,(3,1,1,1)))
+plt.legend(["studentized xbar", "N(0,1)","t(3)"], loc=(0.6,0.7))
+plt.show()
+
+
+
+# Slide 11 - Simulating t-distribution
+from scipy.stats import chi2,t,gamma, norm
+import numpy as np
+import matplotlib.pyplot as plt
+
+def t_sim1(r):
+  x = np.random.normal(0, 1, 1)
+  y = chi2.rvs(df=r, size=1)
+  t_rv = x/(np.sqrt(y/r))
+  return t_rv
+
+np.random.seed(10)
+t_rvs = [t_sim1(3) for i in range(10**4)]
+print(np.mean(t_rvs)) ; print(np.var(t_rvs))
+print(np.var(t.rvs(df=3, size=10**4)))
+
+def t_sim2(r):
+  y = gamma.rvs(a=r/2, loc=1/2, size=1)
+  t_rv = np.random.normal(0, np.sqrt(r/y), 1)
+  return t_rv
+
+np.random.seed(15)
+t_rvs = np.array([t_sim2(3) for i in range(10**4)]).reshape(-1)
+
+plt.hist(t_rvs, density=True, bins=100)
+plt.xlabel("Studentized Sample Mean")
+plt.title("Simulating t(3) Random Numbers")
+plt.xlim([-6,6])
+plt.ylim([0,0.5])
+
+xs = np.arange(-3, 3, 0.01)
+ys = list(map(lambda x: norm.pdf(x, 0, 1), xs))
+plt.plot(xs, ys, color="blue")
+x1 = np.arange(-6, 6, 0.01)
+y1 = list(map(lambda x: t.pdf(x,3), x1))
+plt.plot(x1, y1, color="red")
+plt.show()
+
+
+# Slide 12 - Simulating t-distribution
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import t
+import scipy.stats as stats
+
+def t_sim3(r):
+  u = np.random.random(2)
+  t_rv = np.sqrt(r*((u[0])**(-2/r)-1)) * np.cos(2*np.pi*u[1])
+  return t_rv
+
+np.random.seed(20)
+nreps = 10**4
+t_rvs = [t_sim3(3) for i in range(nreps)]
+q = list(map(lambda x: t.ppf(q=x,df=3), np.linspace(0,1,nreps)))
+stats.probplot(q, dist=stats.t, sparams=(3,), plot=plt)
+plt.show()
+
+# Slide 13 - Method of Composition : Mixture Representation
+from scipy.stats import expon, poisson, geom
+import numpy as np
+import pandas as pd
+np.random.seed(3)
+n=10**4 ; lamb=2
+x = expon.rvs(scale=1/lamb, size=n)
+y = pd.DataFrame(np.array(list(map(lambda x: poisson.rvs(mu=x, size=1), x))).reshape(-1))
+print(y.value_counts()/n)
+print(list(map(lambda x: round(geom.pmf(x, p=2/3, loc=-1),3), np.arange(0,9))))
+
+
+
+# Slide 14 - Method of Composition : Mixture Representation
+from scipy.stats import expon
+import numpy as np
+import matplotlib.pyplot as plt
+np.random.seed(10)
+n = 10**3 ; u =np.random.random(n)
+y = -np.log(1-u)
+x = expon.rvs(scale=y, size=n)
+print(np.mean(x/y))
+
+np.random.seed(11)
+n = 10**3 ; u1 =np.random.random(n)
+u2 = np.random.random(n)
+x = -np.log(1-u1)*(2*(u2<1/2)-1)
+plt.hist(x, bins=25, density=True)
+plt.xlim([-6,6])
+plt.ylim([0,0.6])
+
+xs = np.linspace(-6,6,1000)
+ys = np.exp(-abs(xs))/2
+plt.plot(xs,ys)
+plt.show()
+
+
+
