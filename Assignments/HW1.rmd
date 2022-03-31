@@ -1,0 +1,419 @@
+---
+title: "STAT 323 Assignment 1"
+mainfont: NanumGothic
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width=12, fig.height=10, fig.align ="center", out.width = "50%", warning=FALSE, message=FALSE)
+library(tidyverse)
+```
+
+**1**
+
+(a) Write a user-defined function that yields Φ(x). Then, compare your numbers in 16 significant digits with the output produced by R built-in function pnorm() for x = 1 and x = ?1.
+
+```{r}
+norm.cdf <- function(x){
+  val <- 0
+  temp <- 1
+  n <- 0
+  while(abs(temp) > .Machine$double.eps) {
+    log_temp <- (2*n+1)*log(x) - n*log(2) - lgamma(n+1) - log(2*n+1)
+    temp <- exp(log_temp)
+    if(n %% 2 != 0) temp <- (-1)*temp
+    val <- val + temp
+    n <- n + 1
+  }
+  val <- val / sqrt(2*pi)
+  return(round(val, 16))
+}
+
+norm.cdf(1) - (pnorm(1) - pnorm(0)) < .Machine$double.eps
+(0.5 - norm.cdf(1)) - pnorm(-1) < .Machine$double.eps  
+```
+
+
+표준정규 분포의 cdf 값을 반환하는 함수를 사용자 정의 함수 norm.cdf로 만들었다.  
+
+x = 1 일때의 비교를 위해서는 pnorm은 마이너스 무한대 부터 주어진 수까지의 누적 확률 값을 구하므로 pnorm(1)-pnorm(0)을 통해 비교해줬다. 그 결과 소수점 16자리까지 차이가 없음은 r에 내장된 epsilon을 이용해 비교했고 그 결과 차이가 없음을 볼 수 있다.  
+
+x = -1인 경우는 $P(Z <= -1) = 1 - P(x <= 1)$ 이므로 0.5-norm.cdf(1)과 pnorm(-1)을 비교했다. 그 결과 둘의 차이가 없음을 볼 수 있다.  
+
+
+(b) Draw the graph of $g_n(x)$, n = 1,2,...,40 and compare it with the graph of φ(x).
+
+```{r}
+g <- function(n,x){
+  sterling <- function(n){
+    return(sqrt(2*pi*n)*((n/exp(1))^n))
+  }
+   log_val <- log(sterling(0.5*(n+1)))  - 0.5*log(n*pi) - 
+     log(sterling(n*0.5)) - (n+1)*0.5*log(1+(x^2/n))
+   
+  return(exp(log_val))
+}
+
+x <- seq(-4,4,0.01)
+n <- 1:40
+plot(x,type="n", xlim = c(-4.1, 4.1), ylim = c(0,1), xlab="x",ylab="y")
+for(i in n){
+  y <- g(i, x)
+  lines(x,y, col=rgb(i/40,i/40, 1, i/40))
+}
+curve(dnorm(x), col="red",from=-4, to=4,add=TRUE)
+
+```
+
+$g_n(x)$를 그래프에서 파란색으로 표현했고 φ(x)를 빨간색으로 표현했다. 그리고 n이 커짐에 따라 파란색이 더 선명하도록 그렸다.  
+
+그래프를 보면 n이 커짐에 따라 진한 파란색이 빨간색 그래프와 가까워지는 것을 볼 수 있다. 따라서 n이 커짐에 따라 주어진 $g_n(x)$ 그래프가 φ(x)에 근사함을 볼 수 있다.  
+
+
+**2**  
+  
+Toss a fair coin 30 times and let X be length of the longest sequence of tails. We would like to estimate the distribution of X. That is, P(X = x), x = 0,1,2,...,30. Compute the probability mass function P (X = x) by simulation.  
+  
+```{r}
+set.seed(2021)
+n <- 30
+play_coin <- function(n){
+  coin <- sample(c(0,1),n, replace=T) #let tail 1
+  count <- 0 ; max <- 0
+  for (i in 1:n){
+    if (coin[i] == 1) {
+      count <- count + 1
+      if (count > max) max <- count
+    }
+    else count <- 0
+  }
+  return(max)
+}
+simulate_coin <- replicate(50000, play_coin(30))
+simulate_coin <- factor(simulate_coin, levels=1:n)
+k <- prop.table(table(simulate_coin))
+knitr::kable(k, col.names = c("$X$", "$P(X=x)$"))
+```  
+  
+  
+**3** 
+  
+(a) Let A1 denote the event that no red balls are selected, let A2 denote the event that no white balls are selected, and let A3 denote the event that no blue balls are selected. Compute the probabilities of Ai, i = 1, 2, 3. Provide your answer for P(A1), P(A2) and P(A3) in 6 significant digits.  
+  
+  
+```{r}
+p1 <- choose(40,10)/choose(60,10) ; p2 <- choose(40,10)/choose(60,10)
+p3 <- choose(40,10)/choose(60,10)
+one_p <- c(p1, p2, p3) ; one_p <- sapply(one_p, function(x) {round(x,6)}) 
+names(one_p) <- c("$P(A_1)$","$P(A_2)$","$P(A_3)$")
+knitr::kable(one_p, col.names = "Prob")  
+```  
+  
+  
+(b) Compute the probabilities of Ai ∩ Aj , i, j = 1, 2, 3 in 6 significant digits.  
+  
+  
+```{r}
+p12 <- choose(20,10)/choose(60,10) ; p13 <- choose(20,10)/choose(60,10)
+p23 <- choose(20,10)/choose(60,10)
+two_p <- c(p12, p13, p23) ; two_p <-  sapply(two_p, function(x) {round(x,6)})
+names(two_p) <- c("$P(A_{12})$","$P(A_{13})$","$P(A_{23})$")
+knitr::kable(two_p, colnames = "Prob")
+```  
+Let $P(A_1\cap A_2)$ = $P(A_{12})$, $P(A_1\cap A_3)$ = $P(A_{13})$, $P(A_2\cap A_3)$ = $P(A_{23})$
+  
+(c) The desired probability is written as P (A1 ∪ A2 ∪ A3 ). Provide your answer in 6 significant digits.
+
+```{r}
+sum(one_p) - sum(two_p)
+```  
+  
+$P(A_1\cup A_2\cup A_3) = P(A_1) + P(A_2) + P(A_3) - P(A_{12}) - P(A_{13}) - P(A_{23}) + P(A_1\cap A_2 \cap A_3)$ 이다. 이때 $P(A_1\cap A_2 \cap A_3)=0$이 되므로 주어진 식은 (a)의 답과 (b)의 답의 차를 통해 구할 수 있다.  
+  
+  
+(d) Compute the desired probability by simulation.
+
+```{r}
+set.seed(2021)
+colorballs <- function(n=1000000){
+  count <- 0
+  for (i in 1:n) {
+    balls <- sample(rep(1:3,20),10)
+    count <- count + sum(FALSE %in% (1:3 %in% balls))
+  }
+
+  return(round(count/n,6))
+}
+colorballs()
+``` 
+numerical한 경우와 simulation한 결과를 비교했을 때 약 0.00008의 차이를 보인다.
+  
+  
+**4**  
+  
+  
+(a) Make a 2 × 1000 matrix with their changes in fortune.  
+  
+  
+```{r}
+set.seed(2021)
+game <- matrix(rep(0,2000), nrow=2)
+N <- 1000
+
+for(i in 1:N){
+  toss <- sample(1:2,1)
+  if(i==1) {
+  game[toss,i] <- 1 ; game[-toss,i] <- -1
+  } 
+  else {
+  game[toss,i] <- game[toss,i-1]  + 1
+  game[-toss, i] <- game[-toss, i-1] - 1
+  }
+}
+rownames(game) <- c("A","B")
+colnames(game) <- paste(1:1000, c('st','nd','rd', rep('th', 997)), sep="")
+game[,1:10]
+``` 
+게임이 진행됨에 따라 A와 B가 보유하고 있는 fortune을 matrix로 표현했다.  
+  
+  
+(b) Suppose that player A is interested in the cumulative winnings as the game is played. Compute the cumulative winnings of the individual values in two ways, one using a for loop and the other with built-in functions for your programming language if any. Measure how long your programs take to run.  
+
+```{r}
+A <- c(0, game[1,])
+user.A <- c() ; temp <- 0
+
+system.time(
+for(i in 1:N){
+  if(A[i+1] - A[i] > 0) temp <- temp+1
+  user.A <- c(user.A,  temp)
+})
+
+system.time(
+  builtin.A <- as.vector(cumsum(diff(A) > 0))
+)
+
+user.A[1:10]
+as.vector(builtin.A[1:10])
+tail(user.A,1) ; tail(builtin.A,1)
+```  
+   (a)에서 fortune changes의 matrix를 매 경기에 따라 보유하고 있는 현금으로 정의 했으므로 cumulative winnings를 매 시도에 따라 누적된 승리 수로 정의했다. 사용자 정의 함수와 내장함수를 통해 계산한 결과, 내장함수로 계산했을 때 연산이 빠르며 두 함수 A가 508번 승리 했다는 같은 결과를 산출함을 볼 수 있다.  
+   
+   
+(c) Suppose that player B is interested in the value of the best fortune during the game. Compute the maximum value of player B’s fortune during the game in two ways, one using a for loop and the other with built-in functions for your programming language if any. Measure how long your programs take to run.  
+  
+  
+```{r}
+maxloop.B <- 0
+B <- game[2,]
+system.time(
+for(i in 1:N){
+  if(B[i] > maxloop.B) maxloop.B <- B[i]
+}
+)
+
+maxbuiltin.B <- 0
+system.time(
+  maxbuiltin.B <- max(B)
+)
+maxloop.B; maxbuiltin.B
+```  
+     
+사용자 정의함수와 내장함수를 통해 주어진 값을 계산한 결과 내장함수로 계산했을 때 연산이 더 빠름을 볼 수 있다. 또한 계산결과 B가 게임 중 가장 많이 보유한 돈은 11달러이다.
+  
+**5**
+  
+```{r}
+set.seed(2021)
+x <- sample(1:1750,1750)
+mat <- matrix(x[rowSums(outer(x, c(2, 3, 7), "%%") == 0) == 0], nrow=100)
+print(mat[1:5,]) #Show first 5 rows of matrix
+print(dim(mat))
+```  
+  
+  
+(a) Based on your matrix A, calculate (row-wise) geometric means by row based on your matrix.  
+  
+  
+```{r}
+library(psych)
+gm.builtin <- apply(mat,1,geometric.mean)
+gm.user <- apply(mat, 1, function(x){prod(x)^(1/length(x))})
+all.equal(gm.builtin, gm.user)
+gm.user
+```  
+  
+직접 만든 함수와 기존의 패키지로 구현된 geometric means를 비교한 결과가 같게 나옴으로 geometric means가 잘 계산되었음을 확인할 수 있다.  
+  
+  
+(b) You might also like to calculate the harmonic mean.
+Check that the row-wise harmonic mean is always less than or equal to the row-wise geometric mean for your matrix A.  
+   
+   
+```{r}
+hm.builtin <- apply(mat,1,harmonic.mean)
+hm.user <- apply(mat,1, function(x){length(x)/sum(1/x)})
+all.equal(hm.builtin, hm.user)
+hm.user
+
+sum(gm.user-hm.user >= 0)
+```  
+  
+  
+harmonic means도 마찬가지로 직접 구현한뒤 내장된 함수의 결과와 비교했을 때 모두 같으므로 잘 구현되었음을 확인할 수 있다. geometric means와 harmonic means의 차가 0보다 큰 경우가 100으로 행렬의 row length값과 같다. 따라서 harmonic means이 geometric means보다 작거나 같음을 확인할 수 있다.  
+  
+  
+**6**  
+  
+  
+(a) Assume that there are n = 75 students enrolled in STAT 323. Evaluate $P(B_n>x)$ numerically and provide the graph of the probability $P(B_n>x)$ as a function of x, x = 1, . . . , n-1.  
+  
+```{r}
+PBn <- function(n, x){
+  if (x >= n) return(0)
+  else 
+    return(exp(lfactorial(365)-lfactorial(365-x)-n*log(365) +
+        (n-x)*log(365-x)))
+}
+n <- 75 ; x <- 1:(n-1)
+n75.prob <- sapply(x, function(x) {round(PBn(n,x),6)})
+barplot(n75.prob, xlab="x", ylab="PBx")  
+``` 
+  
+  
+(b) Write a user-defined function that yields $E(B_n)$ for n = 25, 26, . . . , 100 and provide the graph of $E(B_n)$ as a function of n.  
+    
+    
+```{r}
+EBn <- function(n) {
+  return(sum(sapply(1:n, function(x) {x*(PBn(n, x-1)-PBn(n, x))})))
+}
+n <- 25:100
+expects <- sapply(n, function(n) EBn(n))
+barplot(expects, xlab="n", ylab="EBn")
+```  
+   
+  
+(c) Evaluate the expected value of $B_n$, $E(B_n)$ for n = 75 by simulation and compare your answer with the result in (b).  
+  
+  
+```{r}
+set.seed(2021)
+sim.btd <- function(n){
+  btd <- sample(1:365, n, replace=TRUE)
+  for(i in 1:n) {
+    if(sum(btd[i] == btd) > 1) return(i)
+  } 
+  return(n)
+}
+sim.75 <- mean(replicate(10000, sim.btd(75)))
+expec.75 <- EBn(75)
+sim.75 ; expec.75
+```  
+  
+Simulation을 통해 구한 기대값은 5.7355이며 (b) 수식에 의해 구해진 기댓값은 5.748354로 약 0.013정도로 작은 차이가 난다.
+
+**7**  
+  
+
+(a) Write a user-defined function that implements Linear Congruential generator(LCG) with m = 232, a = 1103515245 and c = 12345. You can use your own seed x0. Generate n = 105 pseudo random numbers $x_k$, k = 1, . . . , n. Count for each unique value of xk and how often it appears in each case. 
+  
+  
+```{r}
+set.seed(2021)
+LCG <- function(n, m, a, c, x0) {
+  x <- numeric(n); xn <- x0
+  for (i in 1:n) {
+    xn<- (a*xn + c) %% m
+    x[i] <- xn
+  }
+  return(x)
+}
+
+x0 <- sample(2^32, 1)
+lcg.num <- LCG(10^5, 2^32, 1103515245, 12345, x0) / 2^32
+length(unique(lcg.num))
+
+tab.lcg <- table(lcg.num)
+tab.lcg.1 <- tab.lcg[tab.lcg>1] 
+length(tab.lcg.1) ; unique(tab.lcg.1) 
+```  
+    
+Unique한 $x_k$의 갯수는 18830개다. 그리고 unique한 value가 $10^5$개의 난수 중에서 몇번씩 등장하는지 세보기 위해 table 함수를 이용했다. 대부분의 수가 1번씩 등장했고 1번 이상 등장한 수는 419개이다. 이 수들이 몇번씩 등장했는지 count해 보니 이 수들 모두 194번 혹은 195번 등장했다.  
+  
+
+(b) Use the R built-in function runif to generate n = 105 uniform random numbers xk, k = 1,...,n and count the unique value of $x_k$ and how often it appears in each case.
+  
+  
+```{r}
+set.seed(2021)
+unif.num <- runif(10^5) 
+length(unique(unif.num))
+tab.unif <- table(unif.num)
+length(tab.unif[tab.unif > 1])
+tab.unif[tab.unif > 1]
+```  
+  
+    
+$10^5$개의 수중에서 99999개가 unique하게 나타났다. 그리고 unique하게 나타나지 않은 수는 총 1개로 2번 나타났다.  
+  
+  
+(c) On average, how many unique values you expect to get when you generate n = $10^5$ uniform random numbers using your own LCG? Write a user-defined function to evaluate the expected number of unique values in your uniform random numbers and provide your answer by simulation.  
+  
+  
+```{r}
+set.seed(2021)
+unique.num <- function(){
+  x0 <- sample(2^32, 1)
+  lcg.num <- LCG(10^5, 2^32, 1103515245, 12345, x0) / 2^32
+  return(length(unique(lcg.num)))
+}
+Obv <- mean(replicate(1000, unique.num())) ; Obv  
+```  
+
+  시뮬레이션을 통해 unique한 난수 갯수의 기댓값을 구해본 결과 10182개가 나온다.
+
+
+**8**
+  
+  (a) Write a user-defined function that, given Pascal’s triangle to the nth row, returns Pascal’s triangle to the n + 1st row.
+   
+   
+```{r}
+pascal.nrow <- function(n){
+  if(n == 1) return(1)
+  else if(n == 2) return(c(1,1))
+  else {
+    v <- vector(length = n)
+    v[1] <- 1 ; v[n] <-1
+    for(i in 2:(n-1)) v[i] <- pascal.nrow(n-1)[i-1] + pascal.nrow(n-1)[i]
+  }
+  return(v)
+}
+```  
+  
+  
+(b) Create Pascal’s triangle with n = 12 rows.  
+  
+  
+```{r}
+pascal.triangle <- function(n){
+  plot(0, 0, type="n", xlim=c(-n,n), ylim=c(1,n), axes=FALSE, ylab="",
+       xlab="", main = paste("Pascal's Triangle with n=", n , sep=""))
+  for(i in 1:n){
+    if (i == 1) vec <- 1
+    else if (i == 2) vec <- c(1,1)
+    else {
+      vec <- c(1,bf[2:(i-1)]+bf[1:(i-2)],1)
+    }
+    for(j in 1:i) {
+      text(-(i+1)+2*j, (n+1)-i, label=vec[j])
+    }
+   bf <- vec
+  }
+}
+pascal.triangle(12)
+``` 
+
+  
+
+

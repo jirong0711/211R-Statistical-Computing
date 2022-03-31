@@ -1,0 +1,342 @@
+---
+title: "STAT 323 Assignment 2"
+mainfont: NanumGothic
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width=16, fig.height=12, fig.align ="center", out.width = "70%", warning=FALSE, message=FALSE)
+library(tidyverse)
+```
+
+**1. Let (X, Y) have the following the joint distribution.**
+
+
+**(a) Determine a constant c.**
+
+c값을 찾기 위해 pdf의 특성을 이용한다. 주어진 변수 전체 범위에 대해 pdf
+를 적분하면 1이 되기에 적분을 해서 c값을 찾는다.
+$\int\int_{A} x^2+y^2 \ dxdy  = 1$ $where \ A = \{ (x,y): x^2+y^2 \leq1 \}$
+위 식을 풀기 위해서 polar coordinate을 사용한다.
+따라서, $\int_{\theta=0}^{2\pi}\int_{r=0}^{1} r \ drd\theta = 1 \quad  <=> \quad c = \frac{1}{\pi}$
+
+
+**(b) Find the marginal p.d.fs of X and Y respectively using a Monte Carlo method.**
+
+```{r}
+#generate X and Y from joint distribution of X and Y
+B <- 10^4
+draw_jointXY <- function(B){
+  X <- c() ; Y <- c()
+  for(i in 1:B){
+    set.seed(i)
+    x <- 2*runif(1)-1 ; y <- 2*runif(1)-1
+    if(x^2 +y^2 <= 1) {
+      X <- c(X,x) ; Y <- c(Y,y)
+    }
+  }
+  return(data.frame(X,Y))
+}
+
+XY <- draw_jointXY(B)
+
+#find marginal pdf of X
+hist(XY$X, freq=F, xlab="x", ylab="f(x)", main="marginal pdf of X")
+x <- seq(-1,1,0.001) 
+lines(x, (2/pi) * sqrt(1-x^2), col=2, lwd=2)
+
+
+#find marginal pdf of Y
+hist(XY$Y, freq=F, xlab="y", ylab="f(y)", main="marginal pdf of Y")
+y <- seq(-1,1,0.001) 
+lines(y, (2/pi) * sqrt(1-y^2), col=3, lwd=2)
+```
+
+Hit or Miss method를 통해서 X와 Y를 joint하게 생성했다. 이 방식으로 생성된 
+X와 Y의 각각의 분포는 각 변수의 marginal pdf와 같다.  numerical하게 구했을 때 
+X의 marginal 분포는 $\frac{2}{\pi } * \sqrt{1-x^2}$를 따르며, monte carlo 
+method로 생성된 X의 히스토그램이 위 분포를 따르는 모습을 볼 수 있다.  
+  
+  
+Y의 marginal pdf 또한 $\frac{2}{\pi } * \sqrt{1-y^2}$이며 히스토그램을 통해
+monte carlo method로 생성된 Y의 분포가 Y의 marginal pdf 분포를 보이고 있음을
+알 수 있다.
+
+
+
+
+**(c) Find the p.d.f. of ** **R = $\sqrt{X^2+Y^2}$ using a Monte Carlo method**
+**with approximately** **$10^4$ simulated observations**
+
+
+```{r}
+R <- apply(draw_jointXY(B), 1, function(x) sqrt(sum(x^2)))
+hist(R, freq=F, ylim=c(0,2), xlab="r", ylab="f(r)", main="p.d.f of R")
+r <- seq(0,1,0.001)
+lines(r, 2*r, col=4, lwd=2)
+```
+
+
+(b)의 X와 Y를 monte carlo method를 통해 jointly 하게 생성하고 이를 문제에 주어진
+식대로 변형하면 R을 생성할 수 있다. 
+R의 pdf를 numerical하게 구하면 $f(r) = 2r$ $\quad where$ $\ 0<r<1$ 이며, 위 방식으로 
+생성된 R의 히스토그램이 numerical하게 구한 pdf와 비슷한 분포를 보이고 있다.
+
+
+**2**
+***(a)***
+
+**#4.4**
+
+**A deck of 100 cards?numbered 1, 2, . . . , 100?is shuffled and then turned** 
+**over one card at a time. Say that a “hit” occurs whenever card i is**
+**the $ith$ card to be turned over, i = 1, . . . , 100**
+**Write a simulation program to estimate the expectation and variance of**
+**the total number of hits. Run the program. Find the exact answers and**
+**compare them with your estimates.**
+
+```{r}
+
+card_game <- function(B, n){
+  hits <- c()
+  
+  #shuffling the cards
+  rand_perm <- function(n){
+  perm = 1:n
+  for (i in 1:(n-1)) {
+    j = i+floor((n+1-i)*runif(1))
+    swap= perm[i]
+    perm[i] = perm[j]
+    perm[j] = swap }
+  return(perm)}
+  
+  #simulate the game
+  for(i in 1:B){
+  set.seed(i)
+  cards <- rand_perm(n)
+  hits <- c(hits,sum(cards == 1:n))
+  }
+  return(c(mean(hits), var(hits)))
+}
+
+simu4.4 <- card_game(10000,100) ; names(simu4.4) <- c("mean", "var")
+knitr::kable(simu4.4)
+```
+
+주어진 기댓값과 분산의 정확한 수치적 값은 각각 모두 1이다.
+먼저 X를 전체 카드를 다 뒤집었을때 hit하는 수를 의미한다. 
+
+
+그러면 $E(X) = \sum_{i=1}^{100} E(I_{i}) = \sum_{i=1}^{100}\frac{1}{100} = 1$. 
+$I_{i}$ 는 i번째 카드가 뒤집히는 것을 뜻하는 indicator variable 이다.
+그러면 i번째 카드가 뒤집힐 확률은$\frac{1}{n} = \frac{1}{100}$. 
+따라서 기댓값은 1이 된다.
+
+
+또한 분산을 구하기 위해 먼저 $E(X^2)$를 구한다.
+$E(X^2) = E(\sum_{i=1}^{100} I_i \sum_{j=1}^{100} I_j) \\= \sum_{i=1}^{n=100}E(I^2)+$ 
+$\sum_{ i\neq j} \sum E(I_iI_j) = n*1^{2}*\frac{1}{n}+ n*(n-1) * \frac{1}{n(n-1)} = 1+1=2$
+따라서, $Var(X) = E(X^2) - E(X)^2 = 2 - 1 = 1$
+
+
+그래서 시뮬레이션을 통해서 구해진 기댓값과 분산의 값이 수치적으로 구한 값들과
+거의 동일하게 나옴을 확인할 수 있다.
+
+
+**#4.7**
+**A pair of fair dice are to be continually rolled until all the possible outcomes 2, 3, . . . , 12 have occurred at least once. Develop a simulation study to estimate the expected number of dice rolls that are needed.**
+
+
+```{r}
+dice_game <- function(B){
+  answer <- c()
+  for(i in 1:B){
+    nums <- 1:11
+    count <- 0
+    while(sum(nums) > 0){
+      dice <- sum(floor(6*runif(1))+1, floor(6*runif(1))+1)
+      nums[dice-1] <- 0
+      count <- count +1
+    }
+    answer <- c(answer, count)
+  }
+  return(answer)
+}
+
+answer4.7 <- dice_game(10000)
+knitr::kable((mean(answer4.7)))
+```
+
+기댓값이 약 61이 나오는 것을 볼 수 있다.
+
+**#4.13**
+**Give two methods for generating a random variable X such that**
+$P\{X = i \} = \frac{e^{-\lambda} \lambda^{i}/i!}{\sum_{j=0}^{k}e^{-\lambda}\lambda^j/j!}$
+$i=0,...,k$
+
+```{r}
+#first method : Inverse Transform Method
+first <- function(lambda, k){
+  #pmf of trunc pois
+  prob.truncpois <- function(k, lambda){
+  probs <- c(exp(-lambda),rep(0,k))
+  if(k > 0) {
+    for(i in 2:(k+1)) probs[i] <- probs[i-1] * (lambda/(i-1))
+    probs <- probs / sum(probs)
+  }
+  return(probs)
+  }
+    
+  #calculate the cumulative prob of X
+  cum.probs <- cumsum(prob.truncpois(k, lambda))
+  #generate X from given pmf
+  X <- 0 ; Fx <- cum.probs[1]; U <- runif(1)
+  while(cum.probs[X+1] < U) {
+    X <- X+1
+  }
+  return(X)
+}
+
+#second method: Truncated Distribution
+
+second <- function(B, lambda, k) {
+  Xs <- c()
+  Fb <- sum(sapply(0:k, function(x) {(exp(-lambda) * lambda^(x))/factorial(x)}))
+  for(i in 1:B){
+      X <- 0 ; px <- exp(-lambda)/Fb  ; Fx <- px ; U <- runif(1, max=Fb) / Fb
+      while(Fx < U){
+        X <- X+1
+        px <- px*(lambda/X)
+        Fx <- Fx + px
+      }
+      Xs <- c(Xs, X)
+  }
+  return(Xs)
+}
+
+#Example when k=6 , lambda = 20
+
+first4.13 <- replicate(200000, first(20,6)) %>% table() %>% prop.table()
+first4.13 <- round(first4.13,4)
+second4.13 <- second(200000, 20,6) %>% table() %>% prop.table()
+second4.13 <- round(second4.13,4)
+prob4.13 <- round(dpois(0:6, lambda=20) / sum(dpois(0:6, lambda=20)),4) 
+names(prob4.13) <- 0:6
+knitr::kable(data.frame(first4.13, second4.13, prob4.13))
+```
+
+
+첫번째 방식은 Inverse Transform method를 이용했다. 주어진 pmf를 직접 구한다음
+inverse transform method를 통해 변수를 생성했다.
+
+
+두번째 방식은 Truncated Distribution을 이용해서 변수를 생성했다. 뽑힐 수 있는
+X의 범위를 제한시킨다음 기존의 pois pmf 값에 F(k)값을 나누어준 확률 값에서 
+X가 생성되도록 했다.
+
+
+이를 통해 두가지 simulation 방식으로 변수를 추출한 것과 r의 내장함수를 써서
+확률 값을 비교해보면 비슷하게 나옴을 확인할 수 있다.
+
+
+***(b)***
+
+**#5.1**
+
+**Give a method for generating a random variable having density function**
+$f(x) = \frac{e^{x}}{e-1},$ $0\leq x \leq1$
+
+```{r}
+generate.X <- function(){
+  U <- runif(1)
+  return(log( (exp(1)-1)*U +  1))
+}
+X <- replicate(10000, generate.X())
+hist(X, freq=F, xlab="x", ylab="Density")
+curve(exp(x)/(exp(1)-1),0,1,add=T, col="blue", lwd=2)
+```
+
+Inverse Transform method를 통해서 주어진 density function의 random variable을
+생성했고 histogram을 통해 random variable이 잘 생성됨을 볼 수 있다.
+
+
+**#5.9**
+
+**Give a method to generate a random variable having distribution function**
+$F(x) = \int_{0}^{\infty} x^{y}e^{-y} dy,$ $0\leq x \leq 1$
+
+```{r}
+X5.9 <- function(){
+  U1 <- runif(1) ; U2 <- runif(2)
+  Y <- -log(U1)
+  X <- U2^(1/Y)
+  return(X)
+}
+X <- replicate(10000, X5.9())
+hist(X, freq=F, xlab="x", ylab="Density")
+```
+
+composition method를 통해서 주어진 분포의 random variable을 생성했다. 
+문제의 주어진 힌트를 통해서 Y가 $exp(1)$ 분포를 따르고 해당 분포에서 
+Y가 생성되었을 때 $X|Y$는 $x^{y}$분포를 따르므로 해당 조건부 random variable을
+inverse transform method를 통해 생성하면 주어진 X 변수를 생성할 수 있다.
+
+
+**#5.19**
+
+**Show how to generate a random variable whose distribution function is**
+$F(x) = \frac{1}{2}(x+x^2),$ $0\leq x \leq1$ **using**
+
+
+**(a) the inverse transform method**
+
+```{r}
+inverse5.19 <- function(){
+  U <- runif(1)
+  return( (-1 + sqrt(1+8*U)) / 2)
+}
+inv.X <- replicate(10000, inverse5.19())
+hist(inv.X, freq=F, xlab="x", ylab="Density")
+curve(x+0.5,0,1,add=T, col="red", lwd=2)
+```
+
+cdf의 역함수가 $F^{-1}(X) = -1 + \sqrt{1+8X}$와 같이 나와 이를 이용해
+inverse transform method로 해당 X를 생성했다.
+
+
+**(b) the rejection method**
+
+```{r}
+U1 <- runif(50000)
+U2 <- runif(50000)
+rejec.X <- U1[1.5*U2 <= 0.5 + U1]
+hist(rejec.X, freq=F, xlab="x", ylab="Density")
+curve(x+0.5,0,1,add=T, col="red", lwd=2)
+```
+
+candidate distribution을 $ g(Y) = 1.5*unif(0,1)$를 사용했다. 그 이유는 주어진
+분포의 support of X가 $ 0 \leq x \leq 1$이기 때문이고 최댓값으로 1.5를 가지기
+때문에 candidate 분포를 위와 같이 설정한 뒤 rejection method를 
+통해 X를 생성했다.
+
+
+**(c) the composition method**
+
+
+```{r}
+compo5.19 <- function(){
+  U1 <- runif(1) ; U2 <- runif(1)
+  X <- ifelse(U1 > 0.5, sqrt(U2), U2)
+  return(X)
+}
+compo.X <- replicate(10000, compo5.19())
+hist(compo.X, freq=F, xlab="x", ylab="Density")
+curve(x+0.5,0,1,add=T, col="red", lwd=2)
+```
+
+$f_{X}(x) = \int f_{Y}(y)*f_{X|Y}(x|y) \ dy$로 생각할 때,
+$f_{Y}(y) =\left\{\begin{matrix}&1, 0.5 \\  & \ 2 , 0.5 \end{matrix}\right.$
+이고 $f_{X}(x) = x^y$라고 한다. 따라서 Y를 위와 같은 의미에서 runif(1)에서 
+생성한뒤,  0.5보다 클 경우와 작을 경우로 반반의 확률로 $x^1$과 $x^2$에서 생성
+한다. 그리고 X를 inverse transform method를 통해 생성해주면 위와 같이
+잘 생성됨을 볼 수 있다.
+
