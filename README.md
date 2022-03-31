@@ -25,9 +25,17 @@ chapter | about
 
 
 ###### Assignments implemented twice are in the 'assignments' folder.
-  
-<h2> Final Report </h2>
 
+
+
+<h2> Translation </h2>
+
+
+- To perform statistical algorithms in multiple languages, pratice to translate course materials written in R into Python and Matlab.
+- You can check in Python and Matlab folders.
+
+
+<h2> Final Report </h2>
 
 
 Final Report is to conduct topic modeling about keywords of COVID-19.  
