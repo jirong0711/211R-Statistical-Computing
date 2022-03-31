@@ -27,6 +27,6 @@ chapter | about
 ###### Assignments implemented twice are in the 'assignments' folder.
   
 <h2> Final Report </h2>
-#### Final Report is to conduct topic modeling about keywords of COVID-19. 
-#### To recognize Korean's perceptions about COVID-19, analyze words in newspapers and perform LDA to extract keywords.
-#### Utilize 'Gibbs Sampling' to perform Latent Dirichlet Allocation (LDA).
+Final Report is to conduct topic modeling about keywords of COVID-19.    
+To recognize Korean's perceptions about COVID-19, analyze words in newspapers and perform LDA to extract keywords.     
+Utilize 'Gibbs Sampling' to perform Latent Dirichlet Allocation (LDA).     
