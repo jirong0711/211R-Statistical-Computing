@@ -31,5 +31,5 @@ chapter | about
 
 
 Final Report is to conduct topic modeling about keywords of COVID-19.  
-To recognize Korean's perceptions about COVID-19, analyze words in newspapers and perform LDA to extract keywords.  
-Utilize 'Gibbs Sampling' to perform Latent Dirichlet Allocation (LDA).       
+- To recognize Korean's perceptions about COVID-19, analyze words in newspapers and perform LDA to extract keywords.  
+- Utilize 'Gibbs Sampling' to perform Latent Dirichlet Allocation (LDA).       
