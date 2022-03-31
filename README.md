@@ -6,7 +6,7 @@
 </p>
 
 This repository is for the review of course **_STAT323 Statistical Computing_**.
-This is a course to learn how to think in statistical way,
+This is a course to learn how to think in statistical way.
 
 
 <h2> list-up </h2>
